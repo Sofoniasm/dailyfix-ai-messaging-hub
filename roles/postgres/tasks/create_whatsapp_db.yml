@@ -1,3 +1,4 @@
+<<<<<<< HEAD:roles/postgres/tasks/create_whatsapp_db.yml
 - name: Create database user for mautrix-whatsapp
   community.postgresql.postgresql_user:
     name: "{{ whatsapp_db_user }}"
@@ -18,3 +19,25 @@
     port: 5432
     host: localhost
     state: present
+=======
+- name: Create database user for mautrix-whatsapp
+  community.postgresql.postgresql_user:
+    name: "{{ whatsapp_db_user }}"
+    password: "{{ whatsapp_db_pass }}"
+    db: postgres
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    port: 5432
+    host: localhost
+    state: present
+
+- name: Create database for mautrix-whatsapp
+  community.postgresql.postgresql_db:
+    name: mautrix_whatsapp
+    owner: "{{ whatsapp_db_user }}"
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    port: 5432
+    host: localhost
+    state: present
+>>>>>>> 92d02b8 (chore: sync local changes before rebase):ansible/roles/postgres/tasks/create_whatsapp_db.yml
