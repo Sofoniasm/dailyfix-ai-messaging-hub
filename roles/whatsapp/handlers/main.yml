@@ -1,0 +1,6 @@
+---
+- name: Restart mautrix-whatsapp
+  docker_container:
+    name: mautrix-whatsapp
+    state: started
+    restart: true

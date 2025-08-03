@@ -1,0 +1,20 @@
+- name: Create database user for mautrix-instagram
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_pass }}"
+    db: postgres
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    port: 5432
+    host: localhost
+    state: present
+
+- name: Create database for mautrix-instagram
+  community.postgresql.postgresql_db:
+    name: mautrix_instagram
+    owner: "{{ db_user }}"
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    port: 5432
+    host: localhost
+    state: present

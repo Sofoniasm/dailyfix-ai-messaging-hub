@@ -1,0 +1,31 @@
+homeserver:
+  address: "http://{{ matrix_homeserver_host }}:8008"
+  domain: "{{ matrix_domain }}"
+  verify_ssl: false
+appservice:
+  address: "http://0.0.0.0:29334"
+  hostname: "0.0.0.0"
+  port: 29334
+  database: "postgres://whatsapp_bridge:WhatsAppPass123!@{{ whatsapp_db_host }}:5432/mautrix_whatsapp?sslmode=disable"
+  id: whatsapp
+  bot_username: whatsappbot
+  as_token: "{{ whatsapp_as_token }}"
+  hs_token: "{{ whatsapp_hs_token }}"
+  log_level: info
+  public: true
+
+bridge:
+  displayname: "WhatsApp Bridge"
+  username_template: "whatsapp_{{userid}}"
+  command_prefix: "!wa"
+  allow_invite: true
+  allow_bridge_own_pms: true
+  allow_bridge_own_profile: true
+  permissions:
+    "@admin:{{ matrix_domain }}": admin
+    "*": user
+
+# Add more config options as needed
+    
+# Config for the bridge's database.
+database: "postgres://whatsapp_bridge:WhatsAppPass123!@{{ whatsapp_db_host }}:5432/mautrix_whatsapp?sslmode=disable"

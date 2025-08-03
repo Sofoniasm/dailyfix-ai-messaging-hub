@@ -1,0 +1,60 @@
+- name: Stop and disable host Nginx service
+  service:
+    name: nginx
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+
+
+- name: Pull Nginx image
+  docker_image:
+    name: nginx:latest
+    source: pull
+
+
+# Install Certbot for Let's Encrypt
+- name: Install Certbot
+  apt:
+    name: certbot
+    state: present
+
+# Ensure webroot for challenge exists
+- name: Ensure webroot for ACME challenge exists
+  file:
+    path: /var/www/html/.well-known/acme-challenge
+    state: directory
+    mode: '0755'
+
+# Obtain Let's Encrypt certificate (non-interactive)
+- name: Obtain Let's Encrypt certificate for fidevops.xyz
+  command: >
+    certbot certonly --webroot -w /var/www/html -d fidevops.xyz --agree-tos --email admin@fidevops.xyz --non-interactive --rsa-key-size 2048 --force-renewal
+  args:
+    creates: /etc/letsencrypt/live/fidevops.xyz/fullchain.pem
+
+- name: Ensure Nginx config directory exists
+  file:
+    path: /root/docker/nginx
+    state: directory
+
+- name: Deploy Nginx config for Synapse
+  template:
+    src: synapse_nginx.conf.j2
+    dest: /root/docker/nginx/synapse_nginx.conf
+
+- name: Run Nginx container
+  docker_container:
+    name: nginx
+    image: nginx:latest
+    restart_policy: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /root/docker/nginx/synapse_nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/html:/var/www/html:ro
+    networks:
+      - name: synapse
+      - name: proxy

@@ -1,0 +1,47 @@
+## All Instagram and Telegram bridge cleanup tasks removed for a clean WhatsApp-only deployment
+## Ensure WhatsApp bridge DB user and password are set correctly
+- name: Set WhatsApp bridge user password in Postgres
+  community.postgresql.postgresql_user:
+    name: "{{ whatsapp_db_user }}"
+    password: "{{ whatsapp_db_pass }}"
+    db: "{{ whatsapp_db_name | default('mautrix_whatsapp') }}"
+    login_host: localhost
+    login_user: "{{ postgres_user }}"
+    login_password: "{{ postgres_password }}"
+    state: present
+    port: 5432
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+- name: Ensure synapse Docker network exists
+  docker_network:
+    name: synapse
+    state: present
+
+- name: Create Postgres data directory
+  file:
+    path: "{{ postgres_data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Run Postgres container
+  docker_container:
+    name: synapse-db
+    image: "{{ postgres_image }}"
+    restart_policy: unless-stopped
+    env:
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
+      POSTGRES_DB: "{{ postgres_db }}"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - "{{ postgres_data_dir }}:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    networks:
+      - name: synapse
+
+
+- import_tasks: create_whatsapp_db.yml

@@ -1,0 +1,36 @@
+# Register admin and five users with admin rights
+- name: Register Matrix admin and five admin users
+  vars:
+    matrix_users:
+      - { username: "admin", displayname: "Admin" }
+      - { username: "bonb", displayname: "Bonb" }
+      - { username: "clara", displayname: "Clara" }
+      - { username: "jimi", displayname: "Jimi" }
+      - { username: "alex", displayname: "Alex" }
+      - { username: "tony", displayname: "Tony" }
+      - { username: "clara", displayname: "Clara" }
+      - { username: "jimi", displayname: "Jimi" }
+      - { username: "alex", displayname: "Alex" }
+      - { username: "tony", displayname: "Tony" }
+    matrix_password: "Testing1@2"
+  block:
+    - name: Register users with Synapse admin API
+      uri:
+        url: "http://localhost:8008/_synapse/admin/v2/users/@{{ item.username }}:{{ synapse_server_name }}"
+        method: PUT
+        body_format: json
+        body:
+          password: "{{ matrix_password }}"
+          displayname: "{{ item.displayname }}"
+          admin: true
+          deactivated: false
+        status_code: 200,201
+      loop: "{{ matrix_users }}"
+      register: matrix_user_results
+      failed_when: false
+      ignore_errors: true
+
+    - name: Show created users
+      debug:
+        msg: "Created user @{{ item.username }}:{{ synapse_server_name }} with password '{{ matrix_password }}' (admin: true)"
+      loop: "{{ matrix_users }}"

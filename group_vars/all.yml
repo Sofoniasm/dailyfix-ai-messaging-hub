@@ -1,0 +1,21 @@
+synapse_server_name: "fidevops.xyz"
+synapse_report_stats: "no"
+synapse_image: "matrixdotorg/synapse:latest"
+postgres_image: "postgres:15-alpine"
+synapse_data_dir: "/root/docker/synapse"
+postgres_data_dir: "/root/docker/synapse-db/schemas"
+postgres_user: synapse_user
+postgres_password: Testing1@ECX.COM
+postgres_db: "synapse"
+
+
+# --- mautrix-whatsapp bridge variables ONLY ---
+matrix_homeserver_host: fidevops.xyz        # Matrix homeserver hostname or IP
+matrix_domain: fidevops.xyz                  # Matrix domain
+whatsapp_as_token: 1234567890abcdef1234567890abcdef
+whatsapp_hs_token: abcdef1234567890abcdef1234567890
+whatsapp_db_user: whatsapp_bridge
+whatsapp_db_pass: WhatsAppPass123!
+whatsapp_db_host: synapse-db
+
+matrix_mautrix_whatsapp_enabled: true

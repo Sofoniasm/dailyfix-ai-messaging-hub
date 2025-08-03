@@ -1,0 +1,13 @@
+id: whatsapp
+url: "http://localhost:29334"
+as_token: "{{ whatsapp_as_token }}"
+hs_token: "{{ whatsapp_hs_token }}"
+sender_localpart: whatsappbot
+rate_limited: false
+namespaces:
+  users:
+    - exclusive: true
+      regex: '@whatsapp_.*:{{ matrix_domain }}'
+  aliases:
+    - exclusive: true
+      regex: '#whatsapp_.*:{{ matrix_domain }}'

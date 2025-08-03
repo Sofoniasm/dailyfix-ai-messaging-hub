@@ -1,0 +1,13 @@
+id: whatsapp
+url: "{{ whatsapp_bridge_url }}"
+as_token: "1234567890abcdef1234567890abcdef"
+hs_token: "abcdef1234567890abcdef1234567890"
+sender_localpart: whatsappbot
+rate_limited: false
+namespaces:
+  users:
+    - exclusive: true
+      regex: '@whatsapp_.*:{{ synapse_server_name }}'
+  aliases:
+    - exclusive: true
+      regex: '#whatsapp_.*:{{ synapse_server_name }}'

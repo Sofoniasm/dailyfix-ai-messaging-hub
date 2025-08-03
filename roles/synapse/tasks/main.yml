@@ -1,0 +1,171 @@
+ # Ensure Synapse data directory exists
+- name: Ensure Synapse data directory exists
+  file:
+    path: "{{ synapse_data_dir }}"
+    state: directory
+    owner: 991
+    group: 991
+    mode: '0777'
+
+# Ensure Synapse data directory is owned by 991 and world-writable before config generation
+- name: Ensure Synapse data directory is owned by 991 and world-writable
+  file:
+    path: "{{ synapse_data_dir }}"
+    owner: 991
+    group: 991
+    mode: '0777'
+ 
+
+# Find all signing key files
+- name: Find all Synapse signing key files
+  find:
+    paths: "{{ synapse_data_dir }}"
+    patterns: "*.signing.key"
+  register: signing_keys_found
+
+# Delete all signing key files
+- name: Delete all Synapse signing key files
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ signing_keys_found.files }}"
+  when: signing_keys_found.matched > 0
+
+# Delete homeserver.yaml
+- name: Delete homeserver.yaml
+  file:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    state: absent
+
+
+
+
+# Generate Synapse config and signing key for the correct domain
+- name: Generate Synapse config and signing key
+  command: >
+    docker run --rm \
+      -v {{ synapse_data_dir }}:/data \
+      -e SYNAPSE_SERVER_NAME={{ synapse_server_name }} \
+      -e SYNAPSE_REPORT_STATS={{ synapse_report_stats }} \
+      {{ synapse_image }} generate
+  args:
+    creates: "{{ synapse_data_dir }}/homeserver.yaml"
+
+# Remove any duplicate bind_addresses lines
+- name: Remove duplicate bind_addresses lines
+  lineinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    regexp: '^bind_addresses:'
+    state: absent
+
+# Ensure Synapse binds to 0.0.0.0 for bridges (add only one line)
+- name: Ensure Synapse binds to 0.0.0.0 for bridges
+  lineinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    regexp: '^bind_addresses:'
+    line: "bind_addresses: ['0.0.0.0']"
+    insertafter: '^server_name:'
+
+
+# Ensure WhatsApp registration file is templated with correct bridge URL and permissions
+- name: Ensure WhatsApp registration file is templated with correct bridge URL and permissions
+  template:
+    src: whatsapp/registration-whatsapp.yaml.j2
+    dest: "{{ synapse_data_dir }}/registration-whatsapp.yaml"
+    owner: 991
+    group: 991
+    mode: '0644'
+  vars:
+    whatsapp_bridge_url: "http://localhost:29318"
+
+
+
+
+
+- name: Ensure WhatsApp registration file is included in Synapse config
+  blockinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    marker: "# {mark} ANSIBLE MANAGED WHATSAPP APP SERVICE CONFIG"
+    insertafter: '^server_name:'
+    block: |
+      app_service_config_files:
+        - /data/registration-whatsapp.yaml
+
+- name: Ensure Synapse container mounts WhatsApp registration file
+  set_fact:
+    synapse_extra_volumes: >-
+      {{ synapse_extra_volumes | default([]) + [ {'host_path': synapse_data_dir + '/registration-whatsapp.yaml', 'container_path': '/data/registration-whatsapp.yaml'} ] }}
+
+
+
+- name: Ensure Synapse binds to 0.0.0.0 for bridges
+  lineinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    regexp: '^bind_addresses:'
+    line: "bind_addresses: ['0.0.0.0']"
+    insertafter: '^server_name:'
+
+- name: Patch homeserver.yaml for registration options
+  blockinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    marker: "# {mark} ANSIBLE MANAGED REGISTRATION OPTIONS"
+    insertafter: EOF
+    block: |
+      enable_registration: true
+      enable_registration_without_verification: true
+
+# Find all config and signing key files for permission fix
+- name: Find all Synapse config and signing key files
+  find:
+    paths: "{{ synapse_data_dir }}"
+    patterns: "homeserver.yaml,*.signing.key"
+  register: synapse_config_files
+
+
+# Set correct permissions for Synapse config and signing key (secure after generation)
+- name: Set permissions for Synapse config and signing key
+  file:
+    path: "{{ item.path }}"
+    owner: 991
+    group: 991
+    mode: '0600'
+  loop: "{{ synapse_config_files.files }}"
+  when: synapse_config_files.matched > 0
+
+# Set directory back to secure permissions after config generation
+- name: Set Synapse data directory to secure permissions
+  file:
+    path: "{{ synapse_data_dir }}"
+    owner: 991
+    group: 991
+    mode: '0700'
+ 
+# Run Synapse container
+- name: Run Synapse container
+  docker_container:
+    name: synapse
+    image: "{{ synapse_image }}"
+    restart_policy: unless-stopped
+    env:
+      SYNAPSE_CONFIG_PATH: "/data/homeserver.yaml"
+      UID: "991"
+      GID: "991"
+    volumes:
+      - "{{ synapse_data_dir }}:/data"
+      - "{{ synapse_data_dir }}/registration-whatsapp.yaml:/data/registration-whatsapp.yaml"
+    networks:
+      - name: synapse
+      - name: proxy
+    published_ports:
+      - "8448:8448"
+      - "8008:8008"
+
+- name: Register admin and five admin users
+  import_tasks: register_admins.yml
+
+- name: Ensure Synapse data directory is owned by 991 and writable
+  file:
+    path: "{{ synapse_data_dir }}"
+    owner: 991
+    group: 991
+    mode: '0777'

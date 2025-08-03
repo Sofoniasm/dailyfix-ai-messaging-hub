@@ -1,0 +1,142 @@
+# Debug task to confirm WhatsApp role execution
+- name: DEBUG - WhatsApp role is running
+  debug:
+    msg: "WhatsApp role is being executed"
+# Set default for whatsapp_data_dir if not already defined
+- name: Set default WhatsApp data directory if not defined
+  set_fact:
+    whatsapp_data_dir: "/root/docker/mautrix-whatsapp"
+  when: whatsapp_data_dir is not defined
+# Set default for synapse_server_name if not defined
+- name: Set default synapse_server_name if not defined
+  set_fact:
+    synapse_server_name: "fidevops.xyz"
+  when: synapse_server_name is not defined
+# Set WhatsApp DB variables from group_vars if not already defined
+- name: Set WhatsApp DB variables from group_vars if not already defined
+  set_fact:
+    whatsapp_db_user: "{{ whatsapp_db_user | default('whatsapp_bridge') }}"
+    whatsapp_db_password: "{{ whatsapp_db_pass | default('WhatsAppPass123!') }}"
+    whatsapp_db_host: "{{ whatsapp_db_host | default('synapse-db') }}"
+    whatsapp_db_port: "5432"
+    whatsapp_db_name: "mautrix_whatsapp"
+  when: whatsapp_db_user is not defined or whatsapp_db_password is not defined or whatsapp_db_host is not defined or whatsapp_db_port is not defined or whatsapp_db_name is not defined
+# Set default for userid if not defined
+- name: Set default userid if not defined
+  set_fact:
+    userid: "mautrix_whatsapp"
+  when: userid is not defined
+
+# Stop and remove mautrix-whatsapp container if running
+- name: Stop and remove mautrix-whatsapp container if running
+  docker_container:
+    name: mautrix-whatsapp
+    state: absent
+  ignore_errors: yes
+
+# Remove all old config files in /root/docker/mautrix-whatsapp/
+- name: Remove all old mautrix-whatsapp config files
+  file:
+    path: /root/docker/mautrix-whatsapp/
+    state: absent
+  ignore_errors: yes
+
+
+# Debug before rendering config.yaml
+- name: DEBUG - About to render config.yaml
+  debug:
+    msg: "About to render config.yaml with whatsapp_db_user={{ whatsapp_db_user }}, whatsapp_db_pass={{ whatsapp_db_pass }}, whatsapp_db_host={{ whatsapp_db_host }}"
+
+# --- WhatsApp Bridge Automated Setup ---
+
+- name: Stop and remove mautrix-whatsapp container if running
+  docker_container:
+    name: mautrix-whatsapp
+    state: absent
+  ignore_errors: yes
+
+- name: Remove old mautrix-whatsapp config directory
+  file:
+    path: /root/docker/mautrix-whatsapp/
+    state: absent
+  ignore_errors: yes
+
+- name: Recreate mautrix-whatsapp config directory
+  file:
+    path: /root/docker/mautrix-whatsapp
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Render config.yaml from template
+  template:
+    src: config.yaml.j2
+    dest: /root/docker/mautrix-whatsapp/config.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    force: yes
+
+# Debug after rendering config.yaml
+- name: DEBUG - Rendered config.yaml
+  stat:
+    path: /root/docker/mautrix-whatsapp/config.yaml
+  register: rendered_config_stat
+
+- name: DEBUG - config.yaml stat result
+  debug:
+    var: rendered_config_stat
+
+- name: Render registration.yaml from template
+  template:
+    src: registration.yaml.j2
+    dest: /root/docker/mautrix-whatsapp/registration.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    force: yes
+
+- name: Ensure config.yaml is present and not empty
+  stat:
+    path: /root/docker/mautrix-whatsapp/config.yaml
+  register: whatsapp_config_stat
+
+- name: Fail if config.yaml is missing or empty
+  fail:
+    msg: "config.yaml was not rendered or is empty!"
+  when: not whatsapp_config_stat.stat.exists or whatsapp_config_stat.stat.size == 0
+
+- name: Set permissions for config directory
+  file:
+    path: /root/docker/mautrix-whatsapp/
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Set permissions for config.yaml
+  file:
+    path: /root/docker/mautrix-whatsapp/config.yaml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Set permissions for registration.yaml
+  file:
+    path: /root/docker/mautrix-whatsapp/registration.yaml
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start mautrix-whatsapp container
+  docker_container:
+    name: mautrix-whatsapp
+    image: dock.mau.dev/mautrix/whatsapp:latest
+    restart_policy: always
+    state: started
+    volumes:
+      - /root/docker/mautrix-whatsapp/:/data
+    env:
+      TZ: "UTC"
+    networks:
+      - name: synapse

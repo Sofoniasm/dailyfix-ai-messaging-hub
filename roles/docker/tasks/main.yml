@@ -1,0 +1,17 @@
+- name: Install Docker
+  apt:
+    name: [docker.io, docker-compose]
+    state: present
+    update_cache: yes
+
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure proxy Docker network exists
+  docker_network:
+    name: proxy
+    state: present
