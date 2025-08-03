@@ -78,6 +78,7 @@
     mode: '0644'
     force: yes
 
+
 # Debug after rendering config.yaml
 - name: DEBUG - Rendered config.yaml
   stat:
@@ -96,6 +97,17 @@
     group: root
     mode: '0644'
     force: yes
+
+# Copy WhatsApp registration.yaml to Synapse data directory
+- name: Copy WhatsApp registration.yaml to Synapse data directory
+  copy:
+    src: /root/docker/mautrix-whatsapp/registration.yaml
+    dest: /root/docker/synapse/registration-whatsapp.yaml
+    owner: 991
+    group: 991
+    mode: '0644'
+    force: yes
+    remote_src: yes
 
 - name: Ensure config.yaml is present and not empty
   stat:
