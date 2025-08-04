@@ -1,0 +1,26 @@
+{
+  "name": "matrix_synapse",
+  "version": "1.0.0",
+  "description": "This repository contains Terraform and Ansible code to provision a Matrix Synapse server on Akamai Linode, and fully automate the deployment of the mautrix-whatsapp bridge using Docker. All unnecessary bridges (Instagram, Telegram) and their databases have been removed. The setup is one-command automated, secure (Let's Encrypt SSL), and production-ready.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sofoniasm/Fully-automatedwhatsapp-matrix.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Sofoniasm/Fully-automatedwhatsapp-matrix/issues"
+  },
+  "homepage": "https://github.com/Sofoniasm/Fully-automatedwhatsapp-matrix#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
+  }
+}

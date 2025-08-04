@@ -1,3 +1,84 @@
+# dailyfix-ai-messaging-hub
+
+## Project Overview
+This repository contains two major components:
+
+1. **Matrix Synapse + WhatsApp Bridge (Automated):**
+   - Infrastructure as Code (Terraform) to provision a Linode (Akamai) server
+   - Ansible playbooks to deploy Matrix Synapse, mautrix-whatsapp bridge, Postgres, and Nginx (all Dockerized)
+   - Fully automated registration and configuration
+   - Users can register on Matrix and bridge to WhatsApp seamlessly
+
+2. **AI Messaging Hub Application (Microservices):**
+   - Modern React/Next.js frontend for login, registration, message sync, and visualization
+   - Node.js/Express backend API
+   - (Planned) AI microservices for conversation summarization, intent parsing, vector storage, and daily reports
+   - DevSecOps pipeline and Kubernetes-ready architecture
+
+---
+## Architecture Diagrams
+
+### 1. Matrix Synapse + WhatsApp Bridge
+```
++-------------------+         +-------------------+         +-------------------+
+|                   |         |                   |         |                   |
+|   Matrix Client   | <-----> |   Synapse Server  | <-----> | mautrix-whatsapp  |
+         |                             |                              |
+         |                             |                              |
+         |                             v                              v
+         |                    +-------------------+         +-------------------+
+         |                    |   Postgres DB     |         |   WhatsApp Cloud  |
+         |                    |   (Docker)        |         |   (External)      |
+         |                    +-------------------+         +-------------------+
+         |                             |
+         |                             v
+         |                    +-------------------+
+         |                    |   Nginx Proxy     |
+         |                    |   (Docker)        |
+         |                    +-------------------+
+```
+
+### 2. AI Messaging Hub Application
+```
++-------------------+
+|   React/Next.js   |
+|     Frontend      |
+-------------------+
+          |
+          v
+-------------------+
+|   Node.js/Express |
+|     Backend API   |
+-------------------+
+          |
+          v
+-------------------+      +-------------------+      +-------------------+
+|  AI Microservice  | <--> |  Vector Database  | <--> |  Relational DB    |
+| (Summarization,   |      |  (Pinecone, etc.) |      |  (Postgres, etc.) |
+|  Intent, Reports) |      +-------------------+      +-------------------+
+-------------------+
+```
+
+---
+## Quick Start
+1. Clone the repo and review the `main.tf`, `ansible/`, and `microservices-app/` folders.
+2. Use Terraform to provision your Linode server.
+3. Run the Ansible playbook to deploy Matrix Synapse and the WhatsApp bridge.
+4. Enter `microservices-app/frontend/` and run `npm install && npm run dev` to start the UI.
+5. Enter `microservices-app/backend/` and run `npm install && node index.js` to start the backend API.
+
+---
+
+## Roadmap
+- [x] Fully automated Matrix + WhatsApp bridge
+- [x] Modern frontend and backend scaffolding
+- [ ] AI microservices (summarization, intent, vector, reports)
+- [ ] DevSecOps pipeline and Kubernetes deployment
+
+---
+
+## License
+MIT
 
 # Fully-automatedwhatsapp-matrix
 
