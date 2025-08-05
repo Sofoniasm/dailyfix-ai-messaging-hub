@@ -1,0 +1,74 @@
+---
+- name: Jenkins Agent Setup
+  hosts: jenkins_agent
+  become: yes
+  vars:
+    jenkins_agent_secret: 65e79836d6344f289de8007053f6845b
+    jenkins_master_url: http://192.155.90.198:8080
+    jenkins_agent_name: jenkins-agent
+  tasks:
+    - name: Remove Jenkins if present (fresh install)
+      apt:
+        name: jenkins
+        state: absent
+        purge: yes
+        update_cache: yes
+
+    - name: Remove Jenkins home directory
+      file:
+        path: /var/lib/jenkins
+        state: absent
+      ignore_errors: yes
+
+    - name: Set hostname for Jenkins agent
+      hostname:
+        name: jenkins-agent
+
+    - name: Install Java (required for Jenkins agent)
+      apt:
+        name: openjdk-11-jre-headless
+        state: present
+        update_cache: yes
+
+    - name: Create Jenkins agent workdir
+      file:
+        path: "{{ jenkins_agent_workdir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Download Jenkins agent jar
+      get_url:
+        url: "{{ jenkins_master_url }}/jnlpJars/agent.jar"
+        dest: "{{ jenkins_agent_workdir }}/agent.jar"
+        mode: '0755'
+
+    - name: Create Jenkins agent systemd service
+      copy:
+        dest: /etc/systemd/system/jenkins-agent.service
+        content: |
+          [Unit]
+          Description=Jenkins Agent
+          After=network.target
+
+          [Service]
+          User=root
+          WorkingDirectory={{ jenkins_agent_workdir }}
+          ExecStart=/usr/bin/java -jar {{ jenkins_agent_workdir }}/agent.jar -jnlpUrl {{ jenkins_master_url }}/computer/{{ jenkins_agent_name }}/jenkins-agent.jnlp -secret {{ jenkins_agent_secret }}
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - Reload systemd
+
+    - name: Enable and start Jenkins agent service
+      systemd:
+        name: jenkins-agent
+        enabled: yes
+        state: started
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reload

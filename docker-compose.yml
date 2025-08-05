@@ -46,5 +46,19 @@ services:
     working_dir: /app
     command: npm run dev
 
+  ai-services:
+    build: ./microservices-app/ai-services
+    container_name: dailyfix_ai_services
+    restart: always
+    ports:
+      - "4001:4001"
+      - "4002:4002"
+      - "4003:4003"
+      - "4004:4004"
+    volumes:
+      - ./microservices-app/ai-services:/app
+    working_dir: /app
+    command: npm start
+
 volumes:
   pgdata:

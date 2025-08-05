@@ -1,0 +1,12 @@
+{
+  "name": "ai-services",
+  "version": "1.0.0",
+  "description": "AI microservices for summarization, intent, vector, and reporting",
+  "main": "summarization.js",
+  "scripts": {
+    "start": "node summarization.js & node intent.js & node vector.js & node report.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

@@ -1,3 +1,4 @@
+/* Light green upper body background */
 .page {
   --gray-rgb: 0, 0, 0;
   --gray-alpha-200: rgba(var(--gray-rgb), 0.08);
@@ -7,13 +8,14 @@
   --button-secondary-hover: #f2f2f2;
 
   display: grid;
-  grid-template-rows: 20px 1fr 20px;
-  align-items: center;
+  grid-template-rows: 200px 1fr 20px;
+  align-items: start;
   justify-items: center;
   min-height: 100svh;
-  padding: 80px;
+  padding: 0;
   gap: 64px;
   font-family: var(--font-geist-sans);
+  background: linear-gradient(to bottom, #b2f7c1 0px, #b2f7c1 200px, transparent 200px);
 }
 
 @media (prefers-color-scheme: dark) {

@@ -81,8 +81,57 @@ app.get('/api/sync-messages', messageController.sync);
 // Message visualization
 app.get('/api/messages', messageController.getMessages);
 
-// Placeholder for AI features (future)
-// app.post('/api/ai/process', aiController.process);
+
+// --- AI Microservices Integration ---
+const axios = require('axios');
+
+// Summarization
+app.post('/api/ai/summarize', async (req, res) => {
+  try {
+    const { data } = await axios.post('http://ai-services:4001/summarize', req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Summarization service error.' });
+  }
+});
+
+// Intent detection
+app.post('/api/ai/intent', async (req, res) => {
+  try {
+    const { data } = await axios.post('http://ai-services:4002/intent', req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Intent service error.' });
+  }
+});
+
+// Vectorization
+app.post('/api/ai/vectorize', async (req, res) => {
+  try {
+    const { data } = await axios.post('http://ai-services:4003/vectorize', req.body);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Vector service error.' });
+  }
+});
+app.get('/api/ai/vectors', async (req, res) => {
+  try {
+    const { data } = await axios.get('http://ai-services:4003/vectors');
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Vector service error.' });
+  }
+});
+
+// Daily report
+app.get('/api/ai/report', async (req, res) => {
+  try {
+    const { data } = await axios.get('http://ai-services:4004/report');
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Report service error.' });
+  }
+});
 
 // Root route for health check or welcome
 app.get('/', (req, res) => {

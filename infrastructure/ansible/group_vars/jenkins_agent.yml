@@ -1,0 +1,4 @@
+jenkins_master_url: http://192.155.90.198:8080
+jenkins_agent_name: agent-1
+jenkins_agent_secret: <REPLACE_WITH_REAL_SECRET_FROM_JENKINS_MASTER>
+jenkins_agent_workdir: /home/jenkins

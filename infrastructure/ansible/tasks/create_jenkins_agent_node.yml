@@ -1,0 +1,55 @@
+---
+- name: Create Jenkins agent node and fetch secret
+  hosts: jenkins_master
+  gather_facts: no
+  become: yes
+  vars:
+    jenkins_agent_name: jenkins-agent
+    jenkins_agent_remote_root: /home/jenkins
+    jenkins_agent_labels: "linux agent"
+    jenkins_agent_executors: 2
+    jenkins_admin_user: sofonias
+    jenkins_admin_password: Testing1@ECX.COM
+    jenkins_url: http://localhost:8080
+    jenkins_agent_secret_file: /tmp/jenkins_agent_secret.txt
+  tasks:
+    - name: Ensure python-jenkins is installed
+      pip:
+        name: python-jenkins
+        state: present
+
+    - name: Create Jenkins agent node
+      community.general.jenkins_node:
+        name: "{{ jenkins_agent_name }}"
+        labels: "{{ jenkins_agent_labels }}"
+        num_executors: "{{ jenkins_agent_executors }}"
+        state: present
+        url: "{{ jenkins_url }}"
+        user: "{{ jenkins_admin_user }}"
+        password: "{{ jenkins_admin_password }}"
+      register: agent_node
+
+    - name: Get agent secret via Jenkins API
+      uri:
+        url: "{{ jenkins_url }}/computer/{{ jenkins_agent_name }}/slave-agent.jnlp"
+        user: "{{ jenkins_admin_user }}"
+        password: "{{ jenkins_admin_password }}"
+        force_basic_auth: yes
+        return_content: yes
+      register: agent_jnlp
+
+    - name: Extract agent secret from JNLP
+      set_fact:
+        jenkins_agent_secret: "{{ agent_jnlp.content | regex_search('(?<=<secret>)(.*?)(?=</secret>)') }}"
+
+    - name: Save agent secret to file (for debug)
+      copy:
+        dest: "{{ jenkins_agent_secret_file }}"
+        content: "{{ jenkins_agent_secret }}"
+
+    - name: Set agent secret in group_vars/jenkins_agent.yml
+      lineinfile:
+        path: "{{ playbook_dir }}/../group_vars/jenkins_agent.yml"
+        regexp: '^jenkins_agent_secret:'
+        line: "jenkins_agent_secret: {{ jenkins_agent_secret }}"
+        backrefs: yes

@@ -13,12 +13,22 @@ export default function Home() {
           height={38}
           priority
         />
+
         <ol>
           <li>
             Get started by editing <code>src/app/page.tsx</code>.
           </li>
           <li>Save and see your changes instantly.</li>
         </ol>
+
+        <nav className={styles.ctas} style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+          <a href="/login" className={styles.primary} style={{ marginRight: '1rem' }}>
+            Login
+          </a>
+          <a href="/register" className={styles.secondary}>
+            Create Account
+          </a>
+        </nav>
 
         <div className={styles.ctas}>
           <a
