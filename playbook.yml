@@ -9,3 +9,7 @@
     - synapse
     - nginx
     - whatsapp
+    - { role: telegram, when: enable_telegram | default(false) }
+    - { role: instagram, when: enable_instagram | default(false) }
+    - { role: signal, when: enable_signal | default(false) }
+    - { role: imessage, when: enable_imessage | default(false) }

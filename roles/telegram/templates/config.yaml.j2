@@ -1,0 +1,19 @@
+# mautrix-telegram configuration template
+homeserver:
+  address: "{{ matrix_homeserver_url | default('http://localhost:8008') }}"
+  domain: "{{ matrix_domain | default('Matrix') }}"
+appservice:
+  address: "http://localhost:29317"
+  hostname: "0.0.0.0"
+  port: 29317
+  database: "sqlite:///mautrix-telegram.db"
+  as_token: "{{ telegram_as_token | default('changeme_as_token') }}"
+  hs_token: "{{ telegram_hs_token | default('changeme_hs_token') }}"
+telegram:
+  api_id: "{{ telegram_api_id | default('') }}"
+  api_hash: "{{ telegram_api_hash | default('') }}"
+  bot_token: "{{ telegram_bot_token | default('') }}"
+
+# Allow all Matrix users to use the bridge by default
+permissions:
+  "*": full

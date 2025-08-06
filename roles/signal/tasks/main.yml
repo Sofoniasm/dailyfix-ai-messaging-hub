@@ -1,0 +1,41 @@
+---
+# Tasks for installing and configuring the Signal bridge (mautrix-signal)
+- name: Ensure dependencies are installed
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+
+- name: Create mautrix-signal user
+  user:
+    name: mautrix-signal
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Create directory for mautrix-signal
+  file:
+    path: /opt/mautrix-signal
+    state: directory
+    owner: mautrix-signal
+    group: mautrix-signal
+    mode: '0755'
+  become: true
+
+- name: Download mautrix-signal release
+  get_url:
+    url: https://github.com/mautrix/signal/releases/latest/download/mautrix-signal.zip
+    dest: /opt/mautrix-signal/mautrix-signal.zip
+    mode: '0644'
+  become: true
+
+- name: Unarchive mautrix-signal
+  unarchive:
+    src: /opt/mautrix-signal/mautrix-signal.zip
+    dest: /opt/mautrix-signal/
+    remote_src: yes
+  become: true
+
+# Add more configuration and service setup tasks as needed

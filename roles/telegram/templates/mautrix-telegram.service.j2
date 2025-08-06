@@ -1,0 +1,13 @@
+[Unit]
+Description=Mautrix Telegram Bridge
+After=network.target
+
+[Service]
+Type=simple
+User=mautrix-telegram
+WorkingDirectory=/opt/mautrix-telegram
+ExecStart=/opt/mautrix-telegram/bin/python -m mautrix_telegram -c /opt/mautrix-telegram/config.yaml
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,41 @@
+---
+# Tasks for installing and configuring the iMessage bridge (mautrix-imessage)
+- name: Ensure dependencies are installed
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+
+- name: Create mautrix-imessage user
+  user:
+    name: mautrix-imessage
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Create directory for mautrix-imessage
+  file:
+    path: /opt/mautrix-imessage
+    state: directory
+    owner: mautrix-imessage
+    group: mautrix-imessage
+    mode: '0755'
+  become: true
+
+- name: Download mautrix-imessage release
+  get_url:
+    url: https://github.com/mautrix/imessage/releases/latest/download/mautrix-imessage.zip
+    dest: /opt/mautrix-imessage/mautrix-imessage.zip
+    mode: '0644'
+  become: true
+
+- name: Unarchive mautrix-imessage
+  unarchive:
+    src: /opt/mautrix-imessage/mautrix-imessage.zip
+    dest: /opt/mautrix-imessage/
+    remote_src: yes
+  become: true
+
+# Add more configuration and service setup tasks as needed

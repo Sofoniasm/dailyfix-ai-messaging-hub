@@ -1,0 +1,16 @@
+# mautrix-telegram registration.yaml template
+displayname: Telegram Bridge
+id: telegram
+as_token: "{{ telegram_as_token | default('changeme_as_token') }}"
+hs_token: "{{ telegram_hs_token | default('changeme_hs_token') }}"
+url: "http://173.255.227.63:29317"
+sender_localpart: telegrambot
+rate_limited: false
+namespaces:
+  users:
+    - exclusive: true
+      regex: '@telegram_.*:{{ matrix_domain | default("Matrix") }}'
+  aliases:
+    - exclusive: true
+      regex: '#telegram_.*:{{ matrix_domain | default("Matrix") }}'
+  rooms: []

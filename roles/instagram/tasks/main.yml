@@ -1,0 +1,41 @@
+---
+# Tasks for installing and configuring the Instagram bridge (mautrix-instagram)
+- name: Ensure dependencies are installed
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+
+- name: Create mautrix-instagram user
+  user:
+    name: mautrix-instagram
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Create directory for mautrix-instagram
+  file:
+    path: /opt/mautrix-instagram
+    state: directory
+    owner: mautrix-instagram
+    group: mautrix-instagram
+    mode: '0755'
+  become: true
+
+- name: Download mautrix-instagram release
+  get_url:
+    url: https://github.com/mautrix/instagram/releases/latest/download/mautrix-instagram.zip
+    dest: /opt/mautrix-instagram/mautrix-instagram.zip
+    mode: '0644'
+  become: true
+
+- name: Unarchive mautrix-instagram
+  unarchive:
+    src: /opt/mautrix-instagram/mautrix-instagram.zip
+    dest: /opt/mautrix-instagram/
+    remote_src: yes
+  become: true
+
+# Add more configuration and service setup tasks as needed

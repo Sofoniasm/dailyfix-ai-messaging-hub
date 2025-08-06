@@ -1,0 +1,3 @@
+# Telegram bridge tokens (auto-generated if not set)
+telegram_as_token: "{{ lookup('password', 'telegram_as_token.txt length=64 chars=ascii_letters,digits') }}"
+telegram_hs_token: "{{ lookup('password', 'telegram_hs_token.txt length=64 chars=ascii_letters,digits') }}"

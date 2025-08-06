@@ -1,4 +1,4 @@
- # Ensure Synapse data directory exists
+# Ensure Synapse data directory exists
 - name: Ensure Synapse data directory exists
   file:
     path: "{{ synapse_data_dir }}"
@@ -78,10 +78,6 @@
   vars:
     whatsapp_bridge_url: "http://localhost:29318"
 
-
-
-
-
 - name: Ensure WhatsApp registration file is included in Synapse config
   blockinfile:
     path: "{{ synapse_data_dir }}/homeserver.yaml"
@@ -95,6 +91,34 @@
   set_fact:
     synapse_extra_volumes: >-
       {{ synapse_extra_volumes | default([]) + [ {'host_path': synapse_data_dir + '/registration-whatsapp.yaml', 'container_path': '/data/registration-whatsapp.yaml'} ] }}
+
+
+
+# --- Telegram Bridge Registration ---
+- name: Ensure Telegram registration file is templated with correct bridge URL and permissions
+  template:
+    src: ../../telegram/templates/registration.yaml.j2
+    dest: "{{ synapse_data_dir }}/registration-telegram.yaml"
+    owner: 991
+    group: 991
+    mode: '0644'
+  vars:
+    telegram_bridge_url: "http://localhost:29317"
+
+- name: Ensure Telegram registration file is included in Synapse config
+  blockinfile:
+    path: "{{ synapse_data_dir }}/homeserver.yaml"
+    marker: "# {mark} ANSIBLE MANAGED TELEGRAM APP SERVICE CONFIG"
+    insertafter: '^server_name:'
+    block: |
+      app_service_config_files:
+        - /data/registration-whatsapp.yaml
+        - /data/registration-telegram.yaml
+
+- name: Ensure Synapse container mounts Telegram registration file
+  set_fact:
+    synapse_extra_volumes: >-
+      {{ synapse_extra_volumes | default([]) + [ {'host_path': synapse_data_dir + '/registration-telegram.yaml', 'container_path': '/data/registration-telegram.yaml'} ] }}
 
 
 
@@ -153,6 +177,7 @@
     volumes:
       - "{{ synapse_data_dir }}:/data"
       - "{{ synapse_data_dir }}/registration-whatsapp.yaml:/data/registration-whatsapp.yaml"
+      - "{{ synapse_data_dir }}/registration-telegram.yaml:/data/registration-telegram.yaml"
     networks:
       - name: synapse
       - name: proxy

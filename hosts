@@ -1,3 +1,6 @@
+[all]
+173.255.227.63 ansible_user=root ansible_ssh_pass=Testing1@ECX.COM
+
 [jenkins_agent]
 192.155.90.37 ansible_user=root ansible_ssh_pass=Testing1@ECX.COM
 

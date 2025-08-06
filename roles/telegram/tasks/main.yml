@@ -1,0 +1,100 @@
+---
+# Tasks for installing and configuring the Telegram bridge (mautrix-telegram)
+- name: Ensure dependencies are installed
+  apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+  become: true
+
+- name: Create mautrix-telegram user
+  user:
+    name: mautrix-telegram
+    system: yes
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Create directory for mautrix-telegram
+  file:
+    path: /opt/mautrix-telegram
+    state: directory
+    owner: mautrix-telegram
+    group: mautrix-telegram
+    mode: '0755'
+  become: true
+
+
+
+# Set up Python virtualenv and install mautrix-telegram via pip (production method)
+- name: Create Python virtualenv for mautrix-telegram
+  command: python3 -m venv /opt/mautrix-telegram
+  args:
+    creates: /opt/mautrix-telegram/bin/activate
+  become: true
+  become_user: mautrix-telegram
+
+- name: Install mautrix-telegram in virtualenv
+  command: /opt/mautrix-telegram/bin/pip install --upgrade mautrix-telegram[all]
+  become: true
+  become_user: mautrix-telegram
+
+
+
+- name: Render mautrix-telegram config.yaml
+  template:
+    src: config.yaml.j2
+    dest: /opt/mautrix-telegram/config.yaml
+    owner: mautrix-telegram
+    group: mautrix-telegram
+    mode: '0644'
+  become: true
+
+- name: Render systemd service for mautrix-telegram
+  template:
+    src: mautrix-telegram.service.j2
+    dest: /etc/systemd/system/mautrix-telegram.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+  become: true
+
+- name: Enable and start mautrix-telegram service
+  systemd:
+    name: mautrix-telegram
+    enabled: yes
+    state: started
+  become: true
+
+- name: Render mautrix-telegram registration.yaml
+  template:
+    src: registration.yaml.j2
+    dest: /opt/mautrix-telegram/registration.yaml
+    owner: mautrix-telegram
+    group: mautrix-telegram
+    mode: '0644'
+  become: true
+
+- name: Ensure Synapse config directory exists
+  file:
+    path: /etc/matrix-synapse
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: Copy mautrix-telegram registration.yaml to Synapse config directory
+  copy:
+    src: /opt/mautrix-telegram/registration.yaml
+    dest: /etc/matrix-synapse/registration-telegram.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    remote_src: true
+  become: true

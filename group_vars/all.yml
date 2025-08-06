@@ -19,3 +19,12 @@ whatsapp_db_pass: WhatsAppPass123!
 whatsapp_db_host: synapse-db
 
 matrix_mautrix_whatsapp_enabled: true
+
+# --- mautrix-telegram bridge variables ONLY ---
+telegram_api_id: "24759762"
+telegram_api_hash: "01b17feaf277d0587adecc3ee10a8029"
+telegram_bot_token: "8251093605:AAGtINZA76YnS9LRr39ZCm-7L-vWJcbHcg"
+telegram_as_token: "{{ lookup('password', 'telegram_as_token.txt length=64 chars=ascii_letters,digits') }}"
+telegram_hs_token: "{{ lookup('password', 'telegram_hs_token.txt length=64 chars=ascii_letters,digits') }}"
+
+enable_telegram: true
