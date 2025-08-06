@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -20,42 +19,7 @@ sequelize.sync().then(() => {
 
 // Controllers
 const userController = {
-  register: async (req, res) => {
-    const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required.' });
-    }
-    try {
-      const existing = await User.findOne({ where: { [sequelize.Sequelize.Op.or]: [{ username }, { email }] } });
-      if (existing) {
-        return res.status(409).json({ error: 'User already exists.' });
-      }
-      await User.create({ username, email, password });
-      return res.status(201).json({ message: 'User registered successfully.' });
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error.' });
-    }
-  },
-  login: async (req, res) => {
-    const { username, password } = req.body;
-    try {
-      const user = await User.findOne({
-        where: {
-          [sequelize.Sequelize.Op.or]: [
-            { username },
-            { email: username }
-          ],
-          password
-        }
-      });
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials.' });
-      }
-      return res.json({ message: 'Login successful.', user: { username: user.username, email: user.email } });
-    } catch (err) {
-      return res.status(500).json({ error: 'Server error.' });
-    }
-  }
+  // Removed normal user registration and login logic
 };
 
 const messageController = {
@@ -73,9 +37,7 @@ const messageController = {
 };
 
 // User registration
-app.post('/api/register', userController.register);
-// User login
-app.post('/api/login', userController.login);
+// Removed normal user registration and login endpoints
 // Message sync
 app.get('/api/sync-messages', messageController.sync);
 // Message visualization
@@ -84,6 +46,37 @@ app.get('/api/messages', messageController.getMessages);
 
 // --- AI Microservices Integration ---
 const axios = require('axios');
+
+// Matrix Synapse registration proxy
+app.post('/api/matrix/register', async (req, res) => {
+  const { username, password, homeserverUrl } = req.body;
+  if (!username || !password || !homeserverUrl) {
+    return res.status(400).json({ error: 'Username, password, and homeserverUrl are required.' });
+  }
+  try {
+    const response = await axios.post(
+      `${homeserverUrl}/_matrix/client/r0/register`,
+      {
+        username,
+        password,
+        auth: {
+          type: 'm.login.dummy',
+        },
+      },
+      {
+        params: {
+          kind: 'user',
+        },
+      }
+    );
+    res.status(200).json(response.data);
+  } catch (err) {
+    console.error('Matrix registration error:', err.response ? err.response.data : err.message);
+    const status = err.response ? err.response.status : 500;
+    const error = err.response ? err.response.data : 'Internal Server Error';
+    res.status(status).json({ error });
+  }
+});
 
 // Summarization
 app.post('/api/ai/summarize', async (req, res) => {
