@@ -1,3 +1,43 @@
+// ...existing code...
+
+// Place health check endpoint after app initialization
+// Health check for AI microservices
+app.get('/api/ai/health', async (req, res) => {
+  const results = {};
+  try {
+    // Summarization
+    try {
+      const summarize = await axios.post('http://ai-services:4001/summarize', { text: 'health check' });
+      results.summarize = summarize.data || 'OK';
+    } catch (err) {
+      results.summarize = err.message || 'Error';
+    }
+    // Intent
+    try {
+      const intent = await axios.post('http://ai-services:4002/intent', { text: 'health check' });
+      results.intent = intent.data || 'OK';
+    } catch (err) {
+      results.intent = err.message || 'Error';
+    }
+    // Vector
+    try {
+      const vector = await axios.post('http://ai-services:4003/vectorize', { text: 'health check' });
+      results.vector = vector.data || 'OK';
+    } catch (err) {
+      results.vector = err.message || 'Error';
+    }
+    // Report
+    try {
+      const report = await axios.get('http://ai-services:4004/report');
+      results.report = report.data || 'OK';
+    } catch (err) {
+      results.report = err.message || 'Error';
+    }
+    res.json({ status: 'success', results });
+  } catch (err) {
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
 const express = require('express');
 const cors = require('cors');
 const app = express();
@@ -79,31 +119,43 @@ app.post('/api/matrix/register', async (req, res) => {
 });
 
 // Summarization
+// Summarization: fetch Matrix messages, send to AI summarization service
 app.post('/api/ai/summarize', async (req, res) => {
   try {
-    const { data } = await axios.post('http://ai-services:4001/summarize', req.body);
+    const messagesResponse = await axios.get('http://localhost:3001/api/messages');
+    const messages = messagesResponse.data && messagesResponse.data.messages ? messagesResponse.data.messages : [];
+    const { data } = await axios.post('http://ai-services:4001/summarize', { messages });
     res.json(data);
   } catch (err) {
+    console.error('AI summarize error:', err.message);
     res.status(500).json({ error: 'Summarization service error.' });
   }
 });
 
 // Intent detection
+// Intent detection: fetch Matrix messages, send to AI intent service
 app.post('/api/ai/intent', async (req, res) => {
   try {
-    const { data } = await axios.post('http://ai-services:4002/intent', req.body);
+    const messagesResponse = await axios.get('http://localhost:3001/api/messages');
+    const messages = messagesResponse.data && messagesResponse.data.messages ? messagesResponse.data.messages : [];
+    const { data } = await axios.post('http://ai-services:4002/intent', { messages });
     res.json(data);
   } catch (err) {
+    console.error('AI intent error:', err.message);
     res.status(500).json({ error: 'Intent service error.' });
   }
 });
 
 // Vectorization
+// Vectorization: fetch Matrix messages, send to AI vectorization service
 app.post('/api/ai/vectorize', async (req, res) => {
   try {
-    const { data } = await axios.post('http://ai-services:4003/vectorize', req.body);
+    const messagesResponse = await axios.get('http://localhost:3001/api/messages');
+    const messages = messagesResponse.data && messagesResponse.data.messages ? messagesResponse.data.messages : [];
+    const { data } = await axios.post('http://ai-services:4003/vectorize', { messages });
     res.json(data);
   } catch (err) {
+    console.error('AI vectorize error:', err.message);
     res.status(500).json({ error: 'Vector service error.' });
   }
 });
@@ -117,11 +169,17 @@ app.get('/api/ai/vectors', async (req, res) => {
 });
 
 // Daily report
+// Daily report: fetch Matrix messages, send to AI report service
 app.get('/api/ai/report', async (req, res) => {
   try {
-    const { data } = await axios.get('http://ai-services:4004/report');
+    // Fetch messages from Matrix (or from backend's /api/messages)
+    const messagesResponse = await axios.get('http://localhost:3001/api/messages');
+    const messages = messagesResponse.data && messagesResponse.data.messages ? messagesResponse.data.messages : [];
+    // Send messages to AI report service
+    const { data } = await axios.post('http://ai-services:4004/report', { messages });
     res.json(data);
   } catch (err) {
+    console.error('AI report error:', err.message);
     res.status(500).json({ error: 'Report service error.' });
   }
 });
